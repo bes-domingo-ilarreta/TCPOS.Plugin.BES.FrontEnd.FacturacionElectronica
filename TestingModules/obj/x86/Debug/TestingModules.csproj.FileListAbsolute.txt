@@ -1,0 +1,7 @@
+C:\Users\Desarrollo\Google Drive\TCPOS\Developments\BES Plugins\FrontEnd.TCPOS\Plugin.BES.FrontEnd.FacturacionElectronica\TestingModules\bin\Debug\TestingModules.exe
+C:\Users\Desarrollo\Google Drive\TCPOS\Developments\BES Plugins\FrontEnd.TCPOS\Plugin.BES.FrontEnd.FacturacionElectronica\TestingModules\bin\Debug\TestingModules.pdb
+C:\Users\Desarrollo\Google Drive\TCPOS\Developments\BES Plugins\FrontEnd.TCPOS\Plugin.BES.FrontEnd.FacturacionElectronica\TestingModules\obj\x86\Debug\TestingModules.Form1.resources
+C:\Users\Desarrollo\Google Drive\TCPOS\Developments\BES Plugins\FrontEnd.TCPOS\Plugin.BES.FrontEnd.FacturacionElectronica\TestingModules\obj\x86\Debug\TestingModules.Properties.Resources.resources
+C:\Users\Desarrollo\Google Drive\TCPOS\Developments\BES Plugins\FrontEnd.TCPOS\Plugin.BES.FrontEnd.FacturacionElectronica\TestingModules\obj\x86\Debug\TestingModules.csproj.GenerateResource.Cache
+C:\Users\Desarrollo\Google Drive\TCPOS\Developments\BES Plugins\FrontEnd.TCPOS\Plugin.BES.FrontEnd.FacturacionElectronica\TestingModules\obj\x86\Debug\TestingModules.exe
+C:\Users\Desarrollo\Google Drive\TCPOS\Developments\BES Plugins\FrontEnd.TCPOS\Plugin.BES.FrontEnd.FacturacionElectronica\TestingModules\obj\x86\Debug\TestingModules.pdb
