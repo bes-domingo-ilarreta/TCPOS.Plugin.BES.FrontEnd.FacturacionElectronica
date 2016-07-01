@@ -17,7 +17,7 @@ namespace Plugin.BES.FrontEnd.FacturacionElectronica
     public partial class NewCustomerForm : Form, IObjectResult 
     {
         private BLogic BL;
-        private DbCustomer customer;
+        //private DbCustomer customer;
         private string cardNum;
         public NewCustomerForm()
         {

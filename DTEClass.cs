@@ -13,6 +13,7 @@ using System.Xml;
 using System.Data;
 using System.Windows.Forms;
 using TCPOS.FrontEnd.UserInterface.Interfaces;
+using System.IO;
 
 namespace Plugin.BES.FrontEnd.FacturacionElectronica
 {
@@ -20,7 +21,7 @@ namespace Plugin.BES.FrontEnd.FacturacionElectronica
     {
         //DECLARACIONES
         public BLogic BL;
-        private DbCustomer nuevoCustomer;
+        //private DbCustomer nuevoCustomer;
         public DbCustomer datosReceptor;
         private string webAddress,rut; //Getted from DB or INI file
         private bool enableWebService;//Getted from DB or INI file
@@ -64,6 +65,9 @@ namespace Plugin.BES.FrontEnd.FacturacionElectronica
 
                 string webserviceChileSignature = transaction.GetCustomField("webservice_bes_signature").ToString();
                 writer.WriteField("dte_firma", webserviceChileSignature);
+
+                string nombreTipoDocumento = transaction.GetCustomField("tipo_documento").ToString();
+                writer.WriteField("tipodoc", nombreTipoDocumento);
             }
         }
 
@@ -121,9 +125,10 @@ namespace Plugin.BES.FrontEnd.FacturacionElectronica
                 {
                     BL.MsgError("WE NEED A CUSTOMER");
                     abort = true;
+                    return;
                 }
-                string xmlData = "";
-                string documentType = "";
+                //string xmlData = "";
+                //string documentType = "";
 
                 DbCustomer receptorDTE = new DbCustomer();
                 receptorDTE = customer;
@@ -165,18 +170,22 @@ namespace Plugin.BES.FrontEnd.FacturacionElectronica
                     writer.WriteStartElement("Caratula");
                     writer.WriteAttribute("version", "1.0");
                     //string shopRut = BL.DB.Shop["rut"].ToString();
-                    string shopRut = "76328464-6"; //MANAGE THIS FROM DB ON FRONTEND
+                    //string shopRut = "76328464-6";
+                    string shopRut = dataEmisor.RutBoleta;
                     writer.WriteElement("RutEmisor", shopRut);
                     //string RutEnvia = BL.DB.Shop["RutEnvia"].ToString();
-                    string RutEnvia = "8833649-6";//MANAGE THIS FROM DB ON FRONTEND
+                    //string RutEnvia = "8833649-6";
+                    string RutEnvia = dataEmisor.RutRepLegal;
                     writer.WriteElement("RutEnvia", RutEnvia);
                     //string RutReceptor = BL.DB.Shop["RutReceptor"].ToString();
                     //string RutReceptor = "66666666-6";
                     writer.WriteElement("RutReceptor", rrecep);
                     //DateTime FchResol = Convert.ToDateTime(BL.DB.Shop["FchResol"]);
-                    DateTime FchResol = new DateTime(2014, 04, 22);
-                    writer.WriteElement("FchResol", FchResol.ToString("yyyy-MM-dd"));//MANAGE THIS FROM DB ON FRONTEND
-                    writer.WriteElement("NroResol", 0);//MANAGE THIS FROM DB ON FRONTEND
+                    //DateTime FchResol = new DateTime(2014, 04, 22);
+                    DateTime FchResol = (dataEmisor.ResolDate);
+                    writer.WriteElement("FchResol", FchResol.ToString("yyyy-MM-dd"));
+                    //writer.WriteElement("NroResol", 0);
+                    writer.WriteElement("NroResol", dataEmisor.NumResol);
                     writer.WriteElement("TmstFirmaEnv", DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss"));
                     writer.WriteStartElement("SubTotDTE");
                     writer.WriteElement("TpoDTE", printoutType);
@@ -196,7 +205,7 @@ namespace Plugin.BES.FrontEnd.FacturacionElectronica
                     //ONLY BOLETA
                     writer.WriteStartElement("Documento");
                     //string besRut = myClassPAramData["besRUT"].ToString();
-                    string besRutBoletaE = "76328464-6";
+                    string besRutBoletaE = dataEmisor.RutBoleta;
                     solicitarFolio = webservice.Solicitar_Folio(besRutBoletaE, 39);
                     writer.WriteAttribute("ID", string.Format("R{0}T{1}F{2}", besRutBoletaE, printoutType, solicitarFolio.Folio));
                     //END ONLY BOLETA
@@ -229,11 +238,6 @@ namespace Plugin.BES.FrontEnd.FacturacionElectronica
 
                 writer.WriteEndElement(); //IdDoc
 
-                //OBTENER DATOS EMISOR FROM ADMIN
-                //DataTable dtbemisor = BL.DB.ExecuteDataTable("SELECT * FROM bes_emisor");
-                //object aaa = dtbemisor.Rows[0]["rut_emisor"];
-
-
                 //FIN DATOS EMISOR
 
                 if (printoutType == "39")
@@ -252,14 +256,13 @@ namespace Plugin.BES.FrontEnd.FacturacionElectronica
                 {
                     writer.WriteStartElement("Emisor");
                     //<Acteco>602300</Acteco>
-                    writer.WriteElement("Acteco", "602300");///////////////////////////////////////////ASK 4 THIS FIELD
+                    writer.WriteElement("Acteco", dataEmisor.ActEco);
                     writer.WriteElement("RUTEmisor", dataEmisor.Rut);
                     writer.WriteElement("RznSoc", dataEmisor.RazonEmisor);
                     writer.WriteElement("GiroEmis", dataEmisor.GiroEmisor);
                     writer.WriteElement("DirOrigen", dataEmisor.DireccionEm);
                     writer.WriteElement("CmnaOrigen", dataEmisor.ComunaEm);
                     writer.WriteElement("CiudadOrigen", dataEmisor.CiudadEm);
-                    //<CdgVendedor>-Ningún empleado del departamento de ventas-</CdgVendedor>
                     writer.WriteElement("CdgVendedor", BL.CurrentOperator.Code);
                     writer.WriteEndElement(); //Emisor
                 }
@@ -270,14 +273,13 @@ namespace Plugin.BES.FrontEnd.FacturacionElectronica
                 //OBJETO RECEPTOR
 
                 writer.WriteStartElement("Receptor");
-                //writer.WriteElement("RUTRecep", "66666666-6");//THIS NOT
-                writer.WriteElement("RUTRecep", rrecep);//THIS YEP
+                writer.WriteElement("RUTRecep", rrecep);
                                 
 
                 if (printoutType == "33")//FACTURA
                 {
                     //<CdgIntRecep>76124037C</CdgIntRecep>
-                    writer.WriteElement("CdgIntRecep", getCodeIntRecep(rrecep));//ASK = RUT - DV
+                    writer.WriteElement("CdgIntRecep", getCodeIntRecep(rrecep));
                     writer.WriteElement("RznSocRecep", receptorC.C_o);
                     //<GiroRecep>VENTA AL POR MAYOR DE OTROS PRODUCTOS N.</GiroRecep>
                     writer.WriteElement("GiroRecep", receptorC.C_o);
@@ -303,10 +305,6 @@ namespace Plugin.BES.FrontEnd.FacturacionElectronica
 
                 if (printoutType == "33")//FACTURA
                 {
-                    //<TpoMoneda>PESO CL</TpoMoneda>
-                    //<MntNeto>4744746</MntNeto>
-                    //<TasaIVA>19.00</TasaIVA>
-                    //<IVA>901502</IVA>
                     double monto,neto,iva;
                     string netoS, ivaS;
                     monto = SafeConvert.ToInt32(transaction.Total);
@@ -314,8 +312,6 @@ namespace Plugin.BES.FrontEnd.FacturacionElectronica
                     iva = monto - neto;
                     netoS = SafeConvert.ToString(neto);
                     ivaS = SafeConvert.ToString(iva);
-                    //neto = SafeConvert.ToInt32(neto);
-                    //iva = SafeConvert.ToInt32(iva);
 
                     writer.WriteElement("TpoMoneda", "PESO CL");
                     writer.WriteElement("MntNeto", netoS);
@@ -344,9 +340,13 @@ namespace Plugin.BES.FrontEnd.FacturacionElectronica
                     }
 
                     writer.WriteElement("QtyItem", art.Data.MeasureUnit == DbArticle.Units.Pieces ? art.Quantity : 1);
+                    //writer.WriteElement("QtyItem", 1);
                     writer.WriteElement("UnmdItem", null);
                     writer.WriteElement("PrcItem", art.UnitPrice);
-                    writer.WriteElement("MontoItem", art.TotalPrice);
+                    //writer.WriteElement("MontoItem", art.TotalPrice);
+                    string totalprice = art.TotalPrice.ToString();
+                    totalprice = totalprice.Replace(".00", "");
+                    writer.WriteElement("MontoItem", totalprice);
                     writer.WriteEndElement(); //Detalle
                     position++;
                 }
@@ -377,7 +377,10 @@ namespace Plugin.BES.FrontEnd.FacturacionElectronica
                 if (dataEmisor.SaveXML == 1)
                 {
                     //SAVE TO FILE XML
-                    System.IO.File.WriteAllText(@"C:\xmlTCPOS\" + fob + "" + DateTime.Now.ToString("yyyyMMddHHmm") + ".xml", xmlString);
+                    string path = Path.GetPathRoot(Environment.SystemDirectory);
+                    System.IO.Directory.CreateDirectory("C:\\xmlTCPOS");
+                    //System.IO.File.WriteAllText(@"C:\xmlTCPOS\" + fob + "" + DateTime.Now.ToString("yyyyMMddHHmm") + ".xml", xmlString);
+                    System.IO.File.WriteAllText(@""+path+ "xmlTCPOS\\" + fob + "" + DateTime.Now.ToString("yyyyMMddHHmm") + ".xml", xmlString);
                     //END SAVE TO FILE XML
                 }
 
@@ -422,6 +425,9 @@ namespace Plugin.BES.FrontEnd.FacturacionElectronica
                             transaction.SetCustomField("bes_folio_num", folioNUM);
                         }
                         //END GUARDA FOLIO 2 PRINT
+                        //PRINT TIPO DOC
+                        transaction.SetCustomField("tipo_documento", "FACTURA ELECTRONICA");
+                        //END PRINT TIPO DOC
                     }
                     else
                     {
@@ -478,6 +484,7 @@ namespace Plugin.BES.FrontEnd.FacturacionElectronica
                             transaction.SetCustomField("bes_folio_num", folioNUM);
                         }
                         //END GUARDA FOLIO 2 PRINT
+                        transaction.SetCustomField("tipo_documento", "BOLETA ELECTRONICA");
                     }
                     else
                     {
@@ -577,7 +584,7 @@ namespace Plugin.BES.FrontEnd.FacturacionElectronica
                 //END USING FOMR
 
                 KeypadParameters param = new KeypadParameters("");
-                KeypadResult result;
+                //KeypadResult result;
 
                 if (rut == null)
                 {
@@ -586,22 +593,6 @@ namespace Plugin.BES.FrontEnd.FacturacionElectronica
                 rut = parseRUT(rut);
                 string myCustomer = SafeConvert.ToString(BL.DB.CentralDbExecuteScalar("SELECT card_num FROM customers WHERE card_num = " + SqlHelper.Quote(rut)));
                 
-
-                ////ONLY TESTING
-                //if (myCustomer != "")
-                //{
-                //    //return true; //CLIENTE EXISTE
-                //    BL.MsgInfo("CLIENTE EXISTE");
-                //    BL.RefreshTransactionItems();
-
-                //}
-                //else
-                //{
-                //    //return false;//CLIENTE NO EXISTE
-                //    BL.MsgInfo("CLIENTE NO EXISTE");
-                //}
-                ////ONLY TESTING
-                //DbCustomer customer = null;
                 customer = null;
                 if (myCustomer != "")
                     customer = BL.DB.GetCustomerByCardNum(myCustomer, false);

@@ -24,5 +24,15 @@ namespace Plugin.BES.FrontEnd.FacturacionElectronica
         public string CiudadEm;
         [DbField("save_xml")]
         public int SaveXML;
+        [DbField("rut_emisor_boleta")]
+        public string RutBoleta;
+        [DbField("rut_agent")]
+        public string RutRepLegal;
+        [DbField("num_res")]
+        public int NumResol;
+        [DbField("res_date")]
+        public DateTime ResolDate;
+        [DbField("act_eco")]
+        public int ActEco;
     }
 }
